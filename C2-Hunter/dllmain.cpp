@@ -18,7 +18,6 @@
 #pragma comment(lib, "Urlmon.lib")
 #pragma comment(lib, "Dnsapi.lib")
 
-unsigned char patch[] = { 0xC3 };
 
 HRESULT FURLOpenStreamA(
     LPUNKNOWN            pCaller,
@@ -87,14 +86,19 @@ BOOL FInternetWriteFile(
     return (ret);
 
 }
+
 HINTERNET WINAPI FInternetConnect(HINTERNET hInternet, LPCTSTR lpszServerName, INTERNET_PORT nServerPort, LPCTSTR lpszUserName, LPCTSTR lpszPassword, DWORD dwService, DWORD dwFlags, DWORD dwContext)
 {
     MH_DisableHook(&InternetConnect);
-    MessageBoxA(0, "Zaml", "ZAML", 0);
-    return (InternetConnect(hInternet, lpszServerName, nServerPort, lpszUserName, lpszPassword, dwService, dwFlags, dwContext));
+    std::cout
+        << "Server Name" << lpszServerName
+        << std::endl;
+    HINTERNET ret  = InternetConnect(hInternet, lpszServerName, nServerPort, lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
     MH_EnableHook(&InternetConnect);
+    return (ret);
 
 }
+
 BOOL FInternetReadFile(
     HINTERNET hFile,
     LPVOID    lpBuffer,
@@ -112,7 +116,6 @@ BOOL FInternetReadFile(
     );
     char* buffer = (char*)lpBuffer;
     printf("%s", buffer);
-
     MH_EnableHook(&InternetReadFile);
     return (ret);
 }
@@ -134,7 +137,6 @@ BOOL FInternetReadFileExA(
 
     printf("%.*s \n", lpBuffersOut->dwBufferLength, lpBuffersOut->lpvBuffer);
     printf("%s \n", lpBuffersOut->lpcszHeader);
-
     MH_EnableHook(&InternetReadFileExA);
     return (ret);
 }
@@ -172,7 +174,6 @@ UINT FWinExec(
 )
 {
     MH_DisableHook(&WinExec);
-
     LPWSTR wstr = new WCHAR[255];
     MultiByteToWideChar(CP_ACP, 0, lpCmdLine, -1, wstr, 255);
     OutputDebugStringW(wstr);
@@ -230,6 +231,7 @@ HINTERNET FInternetConnectA(
         "Username :" << lpszUserName <<
         "Password :" << lpszPassword <<
         std::endl;
+
     HINTERNET ret = InternetConnectA(
         hInternet,
         lpszServerName,
@@ -243,6 +245,7 @@ HINTERNET FInternetConnectA(
     MH_EnableHook(&InternetConnectA);
     return (ret);
 }
+
 DNS_STATUS FDnsQueryEx(
     PDNS_QUERY_REQUEST pQueryRequest,
     PDNS_QUERY_RESULT  pQueryResults,
@@ -250,6 +253,7 @@ DNS_STATUS FDnsQueryEx(
 )
 {
     MH_DisableHook(&DnsQueryEx);
+
     if (pQueryRequest->QueryName)
     {
         OutputDebugStringW(pQueryRequest->QueryName);
@@ -265,6 +269,7 @@ DNS_STATUS FDnsQueryEx(
         pCancelHandle);
 
     MH_EnableHook(&DnsQueryEx);
+
     return (ret);
 }
 
@@ -285,6 +290,7 @@ DNS_STATUS FDnsQuery_A(
     std::cout <<
         "DNS name : " << pszName <<
         std::endl;
+
     DNS_STATUS ret = DnsQuery_A(
         pszName,
         wType,
@@ -294,17 +300,19 @@ DNS_STATUS FDnsQuery_A(
         pReserved);
 
     MH_EnableHook(&DnsQuery_A);
+
     return (ret);
 }
 
 int start()
 {
     AllocConsole();
+
     FILE* f = new FILE;
+
     freopen_s(&f, "CONOUT$", "w", stdout);
 
     SetConsoleTitle(L"C2-Hunter");
-
 
     if (MH_Initialize() != MH_OK)
     {
@@ -370,7 +378,7 @@ int start()
         return (-1);
     }
 
-    return 0;
+    return (0);
 }
 
 
@@ -381,13 +389,13 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 {
     switch (ul_reason_for_call)
     {
-    case DLL_PROCESS_ATTACH:
-        start();
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
+        case DLL_PROCESS_ATTACH:
+            start();
+        case DLL_THREAD_ATTACH:
+        case DLL_THREAD_DETACH:
+        case DLL_PROCESS_DETACH:
+            break;
     }
-    return TRUE;
-}
 
+    return (TRUE);
+}
