@@ -314,9 +314,8 @@ int WSAAPI Fakegetaddrinfo(
 )
 {
     // Log input parameters
-    printf("Fakegetaddrinfo called with:\n");
-    printf("  pNodeName: %s\n", pNodeName ? pNodeName : "(null)");
-    printf("  pServiceName: %s\n", pServiceName ? pServiceName : "(null)");
+    printf("pNodeName: %s\n", pNodeName ? pNodeName : "(null)");
+    printf("pServiceName: %s\n", pServiceName ? pServiceName : "(null)");
 
     MH_DisableHook(&getaddrinfo);
 
@@ -336,9 +335,8 @@ int WSAAPI FakeGetAddrInfoW(
     PADDRINFOW* ppResult
 )
 {
-    printf("FakeGetAddrInfoW called with:\n");
-    printf("  pNodeName: %ws\n", pNodeName ? pNodeName : L"(null)");
-    printf("  pServiceName: %ws\n", pServiceName ? pServiceName : L"(null)");
+    printf("pNodeName: %ws\n", pNodeName ? pNodeName : L"(null)");
+    printf("pServiceName: %ws\n", pServiceName ? pServiceName : L"(null)");
 
     MH_DisableHook(&GetAddrInfoW);
 
