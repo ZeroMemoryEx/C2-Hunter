@@ -7,6 +7,7 @@
 #include <wininet.h>
 #include <Urlmon.h>
 #include <windns.h>
+#include <ws2tcpip.h>
 
 #if defined _M_X64
 #pragma comment(lib, "libMinHook.x64.lib")
@@ -17,6 +18,7 @@
 #pragma comment(lib, "wininet.lib")
 #pragma comment(lib, "Urlmon.lib")
 #pragma comment(lib, "Dnsapi.lib")
+#pragma comment (lib, "Ws2_32.lib")
 
 
 HRESULT FURLOpenStreamA(
@@ -93,7 +95,7 @@ HINTERNET WINAPI FInternetConnect(HINTERNET hInternet, LPCTSTR lpszServerName, I
     std::cout
         << "Server Name" << lpszServerName
         << std::endl;
-    HINTERNET ret  = InternetConnect(hInternet, lpszServerName, nServerPort, lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
+    HINTERNET ret = InternetConnect(hInternet, lpszServerName, nServerPort, lpszUserName, lpszPassword, dwService, dwFlags, dwContext);
     MH_EnableHook(&InternetConnect);
     return (ret);
 
@@ -304,6 +306,50 @@ DNS_STATUS FDnsQuery_A(
     return (ret);
 }
 
+int WSAAPI Fakegetaddrinfo(
+    PCSTR           pNodeName,
+    PCSTR           pServiceName,
+    const ADDRINFOA* pHints,
+    PADDRINFOA* ppResult
+)
+{
+    // Log input parameters
+    printf("Fakegetaddrinfo called with:\n");
+    printf("  pNodeName: %s\n", pNodeName ? pNodeName : "(null)");
+    printf("  pServiceName: %s\n", pServiceName ? pServiceName : "(null)");
+
+    MH_DisableHook(&getaddrinfo);
+
+    int ret = getaddrinfo(pNodeName, pServiceName, pHints, ppResult);
+
+
+    // Re-enable hook
+    MH_EnableHook(&getaddrinfo);
+
+    return ret;
+}
+
+int WSAAPI FakeGetAddrInfoW(
+    PCWSTR          pNodeName,
+    PCWSTR          pServiceName,
+    const ADDRINFOW* pHints,
+    PADDRINFOW* ppResult
+)
+{
+    printf("FakeGetAddrInfoW called with:\n");
+    printf("  pNodeName: %ws\n", pNodeName ? pNodeName : L"(null)");
+    printf("  pServiceName: %ws\n", pServiceName ? pServiceName : L"(null)");
+
+    MH_DisableHook(&GetAddrInfoW);
+
+    int ret = GetAddrInfoW(pNodeName, pServiceName, pHints, ppResult);
+
+
+    MH_EnableHook(&GetAddrInfoW);
+
+    return ret;
+}
+
 int start()
 {
     AllocConsole();
@@ -342,6 +388,22 @@ int start()
     MH_CreateHook(&DnsQuery_A, &FDnsQuery_A, NULL);
 
     MH_CreateHook(&DnsQueryEx, &FDnsQueryEx, NULL);
+
+    //
+    MH_CreateHook(&getaddrinfo, &Fakegetaddrinfo, NULL); 
+    if (MH_EnableHook(&getaddrinfo) != MH_OK)
+    {
+        return (-1);
+    }
+
+    MH_CreateHook(&GetAddrInfoW, &FakeGetAddrInfoW, NULL);
+        if (MH_EnableHook(&GetAddrInfoW) != MH_OK)
+        {
+            return (-1);
+        }
+
+    //
+
 
     if (MH_EnableHook(&DnsQueryEx) != MH_OK)
     {
@@ -389,12 +451,12 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 {
     switch (ul_reason_for_call)
     {
-        case DLL_PROCESS_ATTACH:
-            start();
-        case DLL_THREAD_ATTACH:
-        case DLL_THREAD_DETACH:
-        case DLL_PROCESS_DETACH:
-            break;
+    case DLL_PROCESS_ATTACH:
+        start();
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
     }
 
     return (TRUE);
