@@ -290,7 +290,7 @@ DNS_STATUS FDnsQuery_A(
     MultiByteToWideChar(CP_ACP, 0, pszName, -1, wstr, 255);
     OutputDebugStringW(wstr);
     std::cout <<
-        "DNS name : " << pszName <<
+        "DNS name : " << wstr <<
         std::endl;
 
     DNS_STATUS ret = DnsQuery_A(
