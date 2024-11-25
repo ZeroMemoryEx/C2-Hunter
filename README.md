@@ -8,10 +8,14 @@
 * Real-time extraction of C2 traffic
 * Bypasses malware time delays to speed up the extraction process (SOON)
 
-# Requirements
+# Real-world malware usage
 
-* Windows Operating System
-* Administrator Privileges
+* used to extract multiple C2s from malware
+  - https://www.virustotal.com/gui/domain/stlaip578223.ddnsgeek.com
+  - https://www.virustotal.com/gui/domain/stalhy74170.ddns.net
+  - https://www.virustotal.com/gui/domain/stlaip74566.ddnsgeek.com
+    
+![image](https://github.com/user-attachments/assets/20cae99c-1986-487c-a044-b335e4ff64be)
 
 # DEMO
 
